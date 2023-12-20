@@ -15,6 +15,36 @@ Additional parameters:
 -a, --action     specify what action to take in case of different hashes ('warn' or 'overwrite') (default 'warn')
 ```
 
+### Example 1 - Checking the files in-place (same path)
+First run:
+```
+python3 ./unchecksum.py "/disk1/photos"
+```
+
+The program will generate hashes of all your files.
+
+Assuming you have not moved the files around, you can re-run the same command to check for silent corruption.
+
+### Example 2 - Checking the files after a copy (different path)
+First run:
+```
+python3 ./unchecksum.py "/disk1/photos"
+```
+
+The program will generate hashes of all your files.
+
+You can now either:
+
+Option 1: Generate and save all hashes in the new location and compare them with a script (better if you want to save the hashes).
+```
+python3 ./unchecksum.py "/disk2/photos"
+```
+
+Option 2: Rename the directory containing the hashes to make the program check them (not resorting to this "trick" would be an easy PR but I do not need it - feel free to contribute if you want)
+```
+mv files/disk1 files/disk2
+python3 ./unchecksum.py "/disk2/photos"
+```
 
 ## FAQ
 Q: Why docker?
