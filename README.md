@@ -7,4 +7,5 @@ If a file (checked by filename) was never seen before, it will generate a quick 
 
 ## FAQ
 Q: Why docker?
-A: I made this to check files being copied on Unraid ¯\_(ツ)_/¯
+
+A: I made this to check files being copied on Unraid ¯\\_(ツ)_/¯
