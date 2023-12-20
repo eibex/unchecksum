@@ -19,4 +19,4 @@ Additional parameters:
 ## FAQ
 Q: Why docker?
 
-A: I made this to check files being copied on Unraid ¯\\_(ツ)_/¯
+A: I made this to check files being copied on Unraid ¯\\_(ツ)_/¯ (if you actually want to use it in a docker you will have to add the `-t` extra-parameter to keep the docker alive or it will exit after starting
