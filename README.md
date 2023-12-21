@@ -45,4 +45,4 @@ python3 ./unchecksum.py "files/disk1" -c "files/disk2"
 ## FAQ
 Q: Why docker?
 
-A: I made this to check files being copied on Unraid ¯\\_(ツ)_/¯ (if you actually want to use it in a docker you will have to add the `-t` extra-parameter to keep the docker alive or it will exit after starting)
+A: I made this to check files being copied on Unraid and did not want to install Python outside of a container ¯\\_(ツ)_/¯ (if you actually want to use it in a docker you will have to add the `-t` extra-parameter to keep the docker alive or it will exit after starting)
