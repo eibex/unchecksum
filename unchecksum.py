@@ -18,6 +18,12 @@ parser.add_argument(
     type=str,
     help="What action to take in case of different hashes ('warn' or 'overwrite') (default 'warn')",
 )
+parser.add_argument(
+    "-c",
+    "--compare",
+    type=str,
+    help="Compare the given directory against specified one with the same directory and file structure/names against each other (specified after this argument)",
+)
 args = parser.parse_args()
 hash_algorithms = {
     "sha1": hashlib.sha1,
@@ -30,7 +36,6 @@ hash_algorithms = {
 }
 
 different_hashes = {}
-
 
 def calculate_hash(filepath: str, hash_algorithm: str):
     calculated_hash = hash_algorithms[hash_algorithm]()
@@ -78,24 +83,53 @@ def finder(path: str, hash_algorithm: str, action: str):
                 save_hash(file_hash, filepath, file, hash_algorithm)
 
 
+def compare_files(filename, hash1, hash2):
+    if hash1 != hash2:
+        return f"[Mismatch] {filename}\nHash 1: {hash1}\nHash 2: {hash2}\n"
+
+
 path = args.path
 hash_algorithm = args.hash
 action = args.action
+compare = args.compare
 
-if args.action is None:
-    action = "warn"
+if not os.path.exists(path):
+    raise NameError("Specified path does not exist")
 
-if args.hash is None:
-    hash_algorithm = "blake2"
+if not compare:
+    if args.action is None:
+        action = "warn"
 
-if hash_algorithm not in hash_algorithms:
-    raise Exception("Unsupported hash algorithm")
+    if args.hash is None:
+        hash_algorithm = "blake2"
 
-finder(path, hash_algorithm, action)
+    if hash_algorithm not in hash_algorithms:
+        raise Exception("Unsupported hash algorithm")
 
-if not different_hashes:
-    print("No hash changes found.")
+    finder(path, hash_algorithm, action)
 
+    if not different_hashes:
+        print("No hash changes found.")
+
+    else:
+        for filepath in different_hashes:
+            print(f"Filepath: {filepath}\nOld hash: {different_hashes[filepath][0]}\nNew hash: {different_hashes[filepath][1]}")
 else:
-    for filepath in different_hashes:
-        print(f"Filepath: {filepath}\nOld hash: {different_hashes[filepath][0]}\nNew hash: {different_hashes[filepath][1]}")
+    mismatches = False
+    if not os.path.exists(compare):
+        raise NameError("Specified comparison path does not exist")
+    for root, directories, files in os.walk(path):
+        for file in files:
+            filepath = f"{root}/{file}"
+            print(filepath)
+            print(filepath.replace(path, compare))
+            with open(filepath, "r") as f:
+                hash1 = f.read()
+            with open(filepath.replace(path, compare), "r") as f:
+                hash2 = f.read()
+            result = compare_files(f"{root}/{file}", hash1, hash2)
+            if result:
+                print(result)
+                mismatches = True
+    if not mismatches:
+        print("No hash differences found.")

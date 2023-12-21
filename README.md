@@ -13,12 +13,14 @@ Additional parameters:
 ```
 -hs, --hash      specify an hash between 'sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'blake2', 'md5' (default is blake2 for speed)
 -a, --action     specify what action to take in case of different hashes ('warn' or 'overwrite') (default 'warn')
+-c, --compare    compare the given directory against specified one with the same directory and file structure/names against each other (specified after this argument)
 ```
+Note: if using the `--compare` argument the program will *not* calculate hashes, but simply compare two existing sets of hashes against each other.
 
 ### Example 1 - Checking the files in-place (same path)
 First run:
 ```
-python3 ./unchecksum.py "/disk1/photos"
+python3 ./unchecksum.py "/disk1"
 ```
 
 The program will generate hashes of all your files.
@@ -26,24 +28,18 @@ The program will generate hashes of all your files.
 Assuming you have not moved the files around, you can re-run the same command to check for silent corruption.
 
 ### Example 2 - Checking the files after a copy (different path)
-First run:
+First calculate the hashes on both disks (or directories):
 ```
-python3 ./unchecksum.py "/disk1/photos"
+python3 ./unchecksum.py "/disk1"
+python3 ./unchecksum.py "/disk2"
 ```
+I recommend to run these commands in parallel using `tmux` if check two disks to cut the calculation time in half.
 
 The program will generate hashes of all your files.
 
-You can now either:
-
-Option 1: Generate and save all hashes in the new location and compare them with a script (better if you want to save the hashes).
+You can now check the two directories against each other:
 ```
-python3 ./unchecksum.py "/disk2/photos"
-```
-
-Option 2: Rename the directory containing the hashes to make the program check them (not resorting to this "trick" would be an easy PR but I do not need it - feel free to contribute if you want)
-```
-mv files/disk1 files/disk2
-python3 ./unchecksum.py "/disk2/photos"
+python3 ./unchecksum.py "files/disk1" -c "files/disk2"
 ```
 
 ## FAQ
