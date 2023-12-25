@@ -1,6 +1,7 @@
 import os
 import hashlib
 import argparse
+import threading
 
 parser = argparse.ArgumentParser(
     description="Checksum creation and comparison. More info at: https://github.com/eibex/unchecksum"
@@ -23,6 +24,12 @@ parser.add_argument(
     "--compare",
     type=str,
     help="Compare the given directory against specified one with the same directory and file structure/names against each other (specified after this argument)",
+)
+parser.add_argument(
+    "-cc",
+    "--calculatecompare",
+    type=str,
+    help="Calculate hashes and compare the given directory against specified one with the same directory and file structure/names against each other (specified after this argument)",
 )
 args = parser.parse_args()
 hash_algorithms = {
@@ -92,11 +99,12 @@ path = args.path
 hash_algorithm = args.hash
 action = args.action
 compare = args.compare
+calculatecompare = args.calculatecompare
 
 if not os.path.exists(path):
     raise NameError("Specified path does not exist")
 
-if not compare:
+if not compare and not calculatecompare:
     if args.action is None:
         action = "warn"
 
@@ -114,15 +122,35 @@ if not compare:
     else:
         for filepath in different_hashes:
             print(f"Filepath: {filepath}\nOld hash: {different_hashes[filepath][0]}\nNew hash: {different_hashes[filepath][1]}")
+
 else:
+    if calculatecompare:
+        if not os.path.exists(calculatecompare):
+            raise NameError("Specified comparison path does not exist")
+        if args.action is None:
+            action = "warn"
+
+        if args.hash is None:
+            hash_algorithm = "blake2"
+
+        if hash_algorithm not in hash_algorithms:
+            raise Exception("Unsupported hash algorithm")
+
+        # Start thread for 2nd disk
+        thread = threading.Thread(target=finder, args=(calculatecompare, hash_algorithm, action))
+        thread.start()
+        # Main thread for 1st disk
+        finder(path, hash_algorithm, action)
+        # Wait for thread if needed
+        thread.join()
+        compare = calculatecompare
+
     mismatches = False
     if not os.path.exists(compare):
         raise NameError("Specified comparison path does not exist")
     for root, directories, files in os.walk(path):
         for file in files:
             filepath = f"{root}/{file}"
-            print(filepath)
-            print(filepath.replace(path, compare))
             with open(filepath, "r") as f:
                 hash1 = f.read()
             with open(filepath.replace(path, compare), "r") as f:
