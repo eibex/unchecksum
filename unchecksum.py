@@ -12,12 +12,15 @@ parser.add_argument(
     "--hash",
     type=str,
     help="Which hash to use (default 'blake2')",
+    default="blake2",
 )
 parser.add_argument(
     "-a",
     "--action",
     type=str,
     help="What action to take in case of different hashes ('warn' or 'overwrite') (default 'warn')",
+    choices=["warn", "overwrite"],
+    default="warn",
 )
 parser.add_argument(
     "-c",
@@ -31,6 +34,13 @@ parser.add_argument(
     type=str,
     help="Calculate hashes and compare the given directory against specified one with the same directory and file structure/names against each other (specified after this argument)",
 )
+parser.add_argument(
+    "-s",
+    "--skip",
+    action="store_true",
+    help="Skip existing known files and calculate hashes only for new files",
+)
+
 args = parser.parse_args()
 hash_algorithms = {
     "sha1": hashlib.sha1,
@@ -73,22 +83,23 @@ def save_hash(file_hash, filepath, filename, algorithm):
         f.write(file_hash)
 
 
-def finder(path: str, hash_algorithm: str, action: str):
+def finder(path: str, hash_algorithm: str, action: str, skip: bool):
     for root, directories, files in os.walk(path):
         for file in files:
             filepath = f"{root}/{file}"
-            file_hash = calculate_hash(filepath, hash_algorithm=hash_algorithm)
-            if not hash_exists(filepath, hash_algorithm):
-                print(f"Hash for {file} doesn't exist, saving.")
-                save_hash(file_hash, filepath, file, hash_algorithm)
+            if (skip and not hash_exists(filepath, hash_algorithm)) or not skip:
+                file_hash = calculate_hash(filepath, hash_algorithm=hash_algorithm)
 
-            check = check_hash(file_hash, filepath, hash_algorithm)
-            if not check[0]:
-                different_hashes[filepath] = (check[1], file_hash)
+                if not hash_exists(filepath, hash_algorithm):
+                    print(f"Hash for {file} doesn't exist, saving.")
+                    save_hash(file_hash, filepath, file, hash_algorithm)
 
-            if action == "overwrite":
-                save_hash(file_hash, filepath, file, hash_algorithm)
+                check = check_hash(file_hash, filepath, hash_algorithm)
+                if not check[0]:
+                    different_hashes[filepath] = (check[1], file_hash)
 
+                if action == "overwrite":
+                    save_hash(file_hash, filepath, file, hash_algorithm)
 
 def compare_files(filename, hash1, hash2):
     if hash1 != hash2:
@@ -100,21 +111,16 @@ hash_algorithm = args.hash
 action = args.action
 compare = args.compare
 calculatecompare = args.calculatecompare
+skip = args.skip
 
 if not os.path.exists(path):
     raise NameError("Specified path does not exist")
 
 if not compare and not calculatecompare:
-    if args.action is None:
-        action = "warn"
-
-    if args.hash is None:
-        hash_algorithm = "blake2"
-
     if hash_algorithm not in hash_algorithms:
         raise Exception("Unsupported hash algorithm")
 
-    finder(path, hash_algorithm, action)
+    finder(path, hash_algorithm, action, skip)
 
     if not different_hashes:
         print("No hash changes found.")
@@ -127,20 +133,15 @@ else:
     if calculatecompare:
         if not os.path.exists(calculatecompare):
             raise NameError("Specified comparison path does not exist")
-        if args.action is None:
-            action = "warn"
-
-        if args.hash is None:
-            hash_algorithm = "blake2"
 
         if hash_algorithm not in hash_algorithms:
             raise Exception("Unsupported hash algorithm")
 
         # Start thread for 2nd disk
-        thread = threading.Thread(target=finder, args=(calculatecompare, hash_algorithm, action))
+        thread = threading.Thread(target=finder, args=(calculatecompare, hash_algorithm, action, skip))
         thread.start()
         # Main thread for 1st disk
-        finder(path, hash_algorithm, action)
+        finder(path, hash_algorithm, action, skip)
         # Wait for thread if needed
         thread.join()
         compare = calculatecompare
