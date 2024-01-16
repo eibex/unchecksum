@@ -11,9 +11,11 @@ python3 ./unchecksum.py "/path/of/directory/to/check"
 
 Additional parameters:
 ```
--hs, --hash      specify an hash between 'sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'blake2', 'md5' (default is blake2 for speed)
--a, --action     specify what action to take in case of different hashes ('warn' or 'overwrite') (default 'warn')
--c, --compare    compare the given directory against specified one with the same directory and file structure/names against each other (specified after this argument)
+-hs, --hash                 specify an hash between 'sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'blake2', 'md5' (default is blake2 for speed)
+-a, --action                specify what action to take in case of different hashes ('warn' or 'overwrite') (default 'warn')
+-c, --compare               compare the given directory against specified one with the same directory and file structure/names against each other (specified after this argument)
+-cc, --calculatecompare     calculate hashes (with threading) and compare the given directory against specified one with the same directory and file structure/names against each other (specified after this argument)
+-s, --skip                  skip existing known files and calculate hashes only for new files
 ```
 Note: if using the `--compare` argument the program will *not* calculate hashes, but simply compare two existing sets of hashes against each other.
 
@@ -28,18 +30,14 @@ The program will generate hashes of all your files.
 Assuming you have not moved the files around, you can re-run the same command to check for silent corruption.
 
 ### Example 2 - Checking the files after a copy (different path)
-First calculate the hashes on both disks (or directories):
-```
-python3 ./unchecksum.py "/disk1"
-python3 ./unchecksum.py "/disk2"
-```
-I recommend to run these commands in parallel using `tmux` if check two disks to cut the calculation time in half.
-
-The program will generate hashes of all your files.
-
-You can now check the two directories against each other:
+If you have already calculated the hashes for both directories:
 ```
 python3 ./unchecksum.py "files/disk1" -c "files/disk2"
+```
+
+If you need to calculate hashes for both directories:
+```
+python3 ./unchecksum.py "/disk1" -cc "/disk2"
 ```
 
 ## FAQ
