@@ -5,6 +5,12 @@ from werkzeug import security
 
 app = flask.Flask(__name__)
 
+class Sources:
+    def __init__(self):
+        self.source_one = ""
+        self.source_two = ""
+
+
 class Item:
     def __init__(self, name, directory):
         self.name = name
@@ -31,6 +37,17 @@ def list_items(directory):
     return items
 
 @app.route("/", defaults={"directory": ""})
-@app.route("/<path:directory>")
+@app.route("/<path:directory>", )
 def home(directory):
-    return flask.render_template("navigator.html", items=list_items("/" + directory))
+    return flask.render_template("navigator.html", items=list_items("/" + directory), sources=sources)
+
+@app.route("/source", methods=["POST"])
+def select_sources():
+    if flask.request.form.getlist("source_one"):
+        sources.source_one = flask.request.form.getlist("source_one")[0]
+    if flask.request.form.getlist("source_two"):
+        sources.source_two = flask.request.form.getlist("source_two")[0]
+    print(sources.source_one, sources.source_two)
+    return flask.redirect(flask.url_for("home"))
+
+sources = Sources()

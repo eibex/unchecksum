@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <style>
+    html, body {
+        height: 100%;
+        width: 90%;
+        margin: 0 auto;
+    }
+
     .center {
-        margin: auto;
+        margin: 0 auto;
         width: 60%;
         padding: 10px;
     }
+
     #navigator {
         font-family: Arial, Helvetica, sans-serif;
         border-collapse: collapse;
@@ -29,25 +36,43 @@
     }
 </style>
 
-<div class="center">
-    <table id="navigator">
-        <tr>
-            <th>Type</th>
-            <th>Name</th>
-            <th>Date</th>
-            <th>Size</th>
-        </tr>
-        {% for item in items %}
-        <tr>
-            <td>{{ item.type }}</td>
-            {% if item.type == "directory" %}
-            <td><a href="{{ url_for('home', directory=item.path) }}">{{ item.name }}</a></td>
-            {% else %}
-            <td>{{ item.name }}</td>
-            {% endif %}
-            <td>{{ item.date }}</td>
-            <td>{{ item.size }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-</div>
+<body>
+    <div class="center">
+        <form id="sources_selection" action="{{ url_for('select_sources') }}" method="POST">
+            <div>
+                <p><strong>Source 1:</strong> {{ sources.source_one }}</p>
+                <p><strong>Source 2:</strong> {{ sources.source_two }}</p>
+            </div>
+            <div align="right"><input type="submit" value="Select sources"></div>
+            <br>
+                <table id="navigator">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Date</th>
+                            <th>Size</th>
+                            <th>Source 1</th>
+                            <th>Source 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ item.type }}</td>
+                            {% if item.type == "directory" %}
+                            <td><a href="{{ url_for('home', directory=item.path) }}">{{ item.name }}</a></td>
+                            {% else %}
+                            <td>{{ item.name }}</td>
+                            {% endif %}
+                            <td>{{ item.date }}</td>
+                            <td>{{ item.size }}</td>
+                            <td><input type="checkbox" name="source_one" value="{{ item.path }}"></td>
+                            <td><input type="checkbox" name="source_two" value="{{ item.path }}"></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+        </form>
+    </div>
+</body>
